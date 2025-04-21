@@ -1,5 +1,5 @@
 #
-# Jason H. Wells - wellsjason543@gmail.com
+# Jason H. Wells - wellsjason543 at gmail dotcom - jwellsuhhuh (Discord)
 # updated 2025/04/21
 # 
 # "Finance Record CSV" is the exported finance record of everything downloaded from TartanConnect
