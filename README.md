@@ -27,7 +27,7 @@
 - **gift.csv** and **agency.csv** show all records for their respective accounts since the beginning of time (like 2019)
 - every other file is a list of items matching a category found within the gift or agency account
 - there are **7** spending categories and **3** revenue categories. Revenue categories start with **REVENUE--**
-- There won't be a file for any given account category if the program didn't find any items fitting into that category.
+- There won't be a file for any given account category if the program didn't find any items fitting into that category
 
 ## Why are there expenses in some revenue categories
 - Some categories like JFC and donations include expenses related to funding corrections or refunds and admin fees
