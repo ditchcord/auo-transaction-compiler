@@ -1,17 +1,14 @@
 #
 # Jason H. Wells - wellsjason543@gmail.com
-# v1 - 04/12/2025
+# updated 2025/04/21
 # 
 # "Finance Record CSV" is the exported finance record of everything downloaded from TartanConnect
 #
 
 import csv
-import time
 import os
 from os.path import isfile
 from datetime import datetime
-from cmu_cpcs_utils import prettyPrint
-
 
 # dollars -> str
 # cents -> int
@@ -88,10 +85,36 @@ def splitGiftAndAgency(allData: list[list]):
     
     return agencyData, giftData
 
+# RUN IN PLACE
+def removeTimestampFromDates(data: list[list]):
+    for row in data:
+        cutoffIndex = row[0].find(' ')
+        if cutoffIndex == -1:
+            continue
+        row[0] = row[0][:cutoffIndex]
+
 # converts all money format to xx.xx
 def normalizeDollars(data: list[list]):
     for row in data:
         row[4] = Helpers.normalizeDollarsFormatting(row[4])
+
+def flattenCashnetItemNames(data: list[list]):
+    for row in data:
+        if row[2].startswith('ECOM'):
+            receiptNumber = row[2].split('-')[5]
+            row[2] = receiptNumber
+
+# RUN IN PLACE
+def sortChronologically(data: list[list]):
+    # append days since 2000 to first column of each row so it can be sorted
+    for row in data:
+        row.insert(0, Helpers.daysSince2000(row[0]))
+    
+    data.sort()
+
+    # delete the temporary column used for the sort
+    for row in data:
+        del row[0]
 
 # delete transactions that are immediately followed by equivalent opposite transaction
 def removeExceptions(data: list[list]): # RUN IN PLACE
@@ -180,9 +203,9 @@ def change2ndColumnToCategory(data: list[list]):
                       'piano tuning' : 'CONCERT VENUE FEE',
                       'sailor' : 'CONCERT VENUE FEE',
 
-                      'mute' : 'INSTRUMENT EXPENSES',
-                      'string' : 'INSTRUMENT EXPENSES',
-                      'bass' : 'INSTRUMENT EXPENSES',
+                      'mute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                      'string' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                      'bass' : 'INSTRUMENTS & SUPPLIES & OTHERS',
 
                       'sheet' : 'MUSIC',
                       'score' : 'MUSIC',
@@ -196,87 +219,64 @@ def change2ndColumnToCategory(data: list[list]):
                       'allocation' : 'REVENUE--JFC',
                       'surplus' : 'REVENUE--JFC',
 
-                      'domain' : 'SUPPLIES & OTHERS',
-                      'cabinet' : 'SUPPLIES & OTHERS',
+                      'domain' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                      'cabinet' : 'INSTRUMENTS & SUPPLIES & OTHERS',
 
                       'fundrais' : 'REVENUE--DONATIONS & FUNDRAISING',
                       'whipped' : 'REVENUE--DONATIONS & FUNDRAISING',
                       'sales tax' : 'REVENUE--DONATIONS & FUNDRAISING',
 
                       # more general keywords
-                      'instrument' : 'INSTRUMENT EXPENSES',
+                      'instrument' : 'INSTRUMENTS & SUPPLIES & OTHERS',
                       'preparation' : 'OTHER CONCERT EXPENSES',
                       'distributors' : 'MUSIC',
-                      'flute' : 'INSTRUMENT EXPENSES',
+                      'flute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
                       'gift' : 'SOCIALS & GIFTS & MERCH',
                       'orchestra-' : 'GUEST COACHES & PERFORMERS',
                       'services' : 'CONDUCTOR HONORARIUM',
                      }
 
-    accountName: str = data[0][1]
-
+    
     for row in data:
         categoryFound = False
+        # search for key phrase matches in tartan connect category
         for keyPhrase in dictByTartanConnectCategory:
             if keyPhrase in row[3].lower():
                 row[1] = dictByTartanConnectCategory[keyPhrase]
                 categoryFound = True
                 break
+        if categoryFound: continue
         
-        if categoryFound is False:
-            for keyPhrase in dictByItemName:
-                if keyPhrase in row[2].lower():
-                    row[1] = dictByItemName[keyPhrase]
-                    categoryFound = True
-                    break
-        
-        if not categoryFound:
-            if 0 < Helpers.dollarsToCents(row[4]):
-                if accountName == 'Gift Account':
-                    row[1] = 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
-                else: row[1] = 'REVENUE--JFC' # default agency revenue category
-            else:
-                row[1] = 'SUPPLIES & OTHERS' # default agency/gift expense category
-
-# RUN IN PLACE
-def removeTimestampFromDates(data: list[list]):
-    for row in data:
-        cutoffIndex = row[0].find(' ')
-        if cutoffIndex == -1:
-            continue
-        row[0] = row[0][:cutoffIndex]
-
-# RUN IN PLACE
-def sortChronologically(data: list[list]):
-    # append days since 2000 to first column of each row so it can be sorted
-    for row in data:
-        row.insert(0, Helpers.daysSince2000(row[0]))
+        # search for key phrase matches in item name
+        for keyPhrase in dictByItemName:
+            if keyPhrase in row[2].lower():
+                row[1] = dictByItemName[keyPhrase]
+                categoryFound = True
+                break
+        if categoryFound: continue
     
-    data.sort()
-
-    # delete the temporary column used for the sort
-    for row in data:
-        del row[0]
+        # no key phrase found - apply default category
+        accountName: str = data[0][1]
+        if 0 < Helpers.dollarsToCents(row[4]):
+            if accountName == 'Gift Account':
+                row[1] = 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
+            else: row[1] = 'REVENUE--JFC' # default agency revenue category
+        else:
+            row[1] = 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
 
 def removeTartanConnectCategory(data: list[list]):
     for row in data:
         del row[3]
 
-def flattenCashnetItemNames(data: list[list]):
-    for row in data:
-        if row[2].startswith('ECOM'):
-            receiptNumber = row[2].split('-')[5]
-            row[2] = receiptNumber
-
 # RUN IN PLACE
 def addHeadings(data):
-    headings = ['Date','Category', 'Item','Amount', 'Balance']
+    headings = ['Date','Category','Item','Amount','Remaining Balance']
     data.insert(0,headings)
 
-# returns folder path string (date in unix seconds)
+# creates /private/[dateTimeNow] folder and returns folder path
 def createFolderInPrivate() -> str:
-    timeNow = str(int(time.time())) # discard decimal points
-    path = f'private/{timeNow}'
+    dateTimeNow = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    path = f'private/{dateTimeNow}'
     os.makedirs(path)
     return path
 

@@ -1,10 +1,19 @@
 # auo-transaction-compiler
 
-### Automatically organize all TartanConnect accounting records into categories
+### Automatically organize all TartanConnect accounting records into spending categories
 
-## Obtaining TartanConnect accounting records
-1. Rename the file to something easy to type like **record1** or whatever
-2.
+## Additional Features
+- Cleans up each transaction into Date, Category, Item, Amount, and Remaining Balance
+- Cashnet transactions are trimmed to just say the receipt number
+- Removes exceptions (any transaction immediately followed by an equivalent opposite transactions)
+- Every output .csv is sorted chronologically
+- Outputs a separate .csv for every category in gift and agency accounts
+
+## Obtaining TartanConnect accounting record
+1. Go to TartanConnect -> Groups -> All University Orchestra -> Accounting Book
+2. Select the checkbox right under the "search transactions" bar and click **Select all xxx Transactions**
+3. Click **Generate Report** and it should download a .csv file
+4. Rename the file to something easy to type like **record1** or whatever
 
 ## Quick Start
 1. Install Python 3.10 or newer
@@ -17,7 +26,7 @@
 ## The output .csv's
 - **gift.csv** and **agency.csv** show all records for their respective accounts since the beginning of time (like 2019)
 - every other file is a list of items matching a category found within the gift or agency account
-- there are **8** spending categories and **3** revenue categories. Revenue categories start with **REVENUE--**
+- there are **7** spending categories and **3** revenue categories. Revenue categories start with **REVENUE--**
 - There won't be a file for any given account category if the program didn't find any items fitting into that category.
 
 ## Why are there expenses in some revenue categories
