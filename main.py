@@ -184,6 +184,7 @@ def change2ndColumnToCategory(data: list[list]):
                       'stream' : 'OTHER CONCERT EXPENSES',
                       'video' : 'OTHER CONCERT EXPENSES',
                       'record' : 'OTHER CONCERT EXPENSES',
+                      'lighting' : 'OTHER CONCERT EXPENSES',
                       'tech' : 'OTHER CONCERT EXPENSES',
                       'advert' : 'OTHER CONCERT EXPENSES',
                       'poster' : 'OTHER CONCERT EXPENSES',
@@ -264,9 +265,40 @@ def change2ndColumnToCategory(data: list[list]):
         else:
             row[1] = 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
 
+# RUN IN PLACE
 def removeTartanConnectCategory(data: list[list]):
     for row in data:
         del row[3]
+
+# RUN IN PLACE
+def discardNonCurrentFY(agencyData, giftData):
+    while True:
+        isDiscarding = input('Discard transactions from previous fiscal years? (y/n): ')
+        match isDiscarding:
+            case 'y':
+                for data in agencyData, giftData:
+                    latestMonth, latestDay, latestYear = map(int, data[-1][0].split('/'))
+                    latestDate = datetime(latestYear,latestMonth,latestDay)
+                    if latestDate < datetime(latestYear,8,1): # spring semester
+                        cutoffDate = datetime(latestYear-1,8,1)
+                    else: # fall semester
+                        cutoffDate = datetime(latestYear,8,1)
+                    
+                    # purge first index of list until cutoff is reached
+                    month, day, year = map(int, data[0][0].split('/'))
+                    date = datetime(year,month,day)
+                    while date < cutoffDate:
+                        del data[0]
+                        month, day, year = map(int, data[0][0].split('/'))
+                        date = datetime(year,month,day)
+                return
+
+            case 'n':
+                print('a')
+                return # do nothing
+            case _:
+                print('Invalid response\n')
+
 
 # RUN IN PLACE
 def addHeadings(data):
@@ -311,7 +343,10 @@ def main():
         # remove un-needed data
         removeTartanConnectCategory(data)
         
-        addHeadings(data)
+    discardNonCurrentFY(agencyData, giftData)
+
+    addHeadings(agencyData)
+    addHeadings(giftData)
 
 
     # export full accounting records
