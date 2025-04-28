@@ -93,6 +93,11 @@ def removeTimestampFromDates(data: list[list]):
             continue
         row[0] = row[0][:cutoffIndex]
 
+def convertDatesToDatetimeObjects(data: list[list]):
+    for row in data:
+        month, day, year = row[0].split('/')
+        row[0] = datetime(int(year),int(month),int(day))
+
 # converts all money format to xx.xx
 def normalizeDollars(data: list[list]):
     for row in data:
@@ -271,30 +276,32 @@ def removeTartanConnectCategory(data: list[list]):
         del row[3]
 
 # RUN IN PLACE
+def convertDatesBackToStrings(agencyData, giftData):
+    for data in agencyData, giftData:
+        for row in data:
+            row[0] = row[0].strftime('%Y/%m/%d')
+
+# RUN IN PLACE
 def discardNonCurrentFY(agencyData, giftData):
     while True:
         isDiscarding = input('Discard transactions from previous fiscal years? (y/n): ')
         match isDiscarding:
             case 'y':
                 for data in agencyData, giftData:
-                    latestMonth, latestDay, latestYear = map(int, data[-1][0].split('/'))
-                    latestDate = datetime(latestYear,latestMonth,latestDay)
-                    if latestDate < datetime(latestYear,8,1): # spring semester
-                        cutoffDate = datetime(latestYear-1,8,1)
+                    latestDate: datetime = data[-1][0]
+                    if latestDate < datetime(latestDate.year,8,1): # spring semester
+                        cutoffDate = datetime(latestDate.year-1,8,1)
                     else: # fall semester
-                        cutoffDate = datetime(latestYear,8,1)
+                        cutoffDate = datetime(latestDate.year,8,1)
                     
                     # purge first index of list until cutoff is reached
-                    month, day, year = map(int, data[0][0].split('/'))
-                    date = datetime(year,month,day)
+                    date: datetime = data[0][0]
                     while date < cutoffDate:
                         del data[0]
-                        month, day, year = map(int, data[0][0].split('/'))
-                        date = datetime(year,month,day)
+                        date = data[0][0]
                 return
 
             case 'n':
-                print('a')
                 return # do nothing
             case _:
                 print('Invalid response\n')
@@ -330,10 +337,11 @@ def main():
     for data in agencyData, giftData:
         # cleanup data formats
         removeTimestampFromDates(data)
+        convertDatesToDatetimeObjects(data)
+        data.sort() # sort chronologically
         normalizeDollars(data)
         flattenCashnetItemNames(data)
 
-        sortChronologically(data)
         removeExceptions(data)
 
         # add useful information
@@ -344,6 +352,7 @@ def main():
         removeTartanConnectCategory(data)
         
     discardNonCurrentFY(agencyData, giftData)
+    convertDatesBackToStrings(agencyData, giftData)
 
     addHeadings(agencyData)
     addHeadings(giftData)
