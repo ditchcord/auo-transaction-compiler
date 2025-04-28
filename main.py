@@ -26,9 +26,8 @@ class Helpers:
         else:
             raise TypeError(f'Invalid Dollars Format: {dollars}')
 
-    # requires normalized dollars
     @staticmethod
-    def dollarsToCents(dollars: str) -> int:
+    def dollarsToCents(dollars: str) -> int: # requires normalized dollars
         return int(dollars[:-3] + dollars[-2:])
 
     @staticmethod
@@ -40,14 +39,43 @@ class Helpers:
         return start + '.' + end
     
     @staticmethod
-    def daysSince2000(date: str):
-        # Split the date string by '/'
-        month, day, year = map(int, date.split('/'))
-        date: datetime = datetime(year, month, day)
+    def keywordSubstitution(string: str, substitutionDict: dict): # recursively substitute keywords
+        for keyword in substitutionDict:
+            index = string.lower().find(keyword)
+            if index == -1:
+                continue
+            # substitute the keyword
+            string = string[:index] + substitutionDict[keyword] + string[index + len(keyword):]
+            # recurse
+            string = Helpers.keywordSubstitution(string, substitutionDict)
+            break
         
-        daysSince2000 = (date - datetime(2000, 1, 1)).days
+        return string
+    
+    @staticmethod
+    def removeDuplicateSubstrings(string: str, minimumSubstringLength: int): # recursively remove all duplicate substrings
+        stringLength = len(string)
+
+        # Check all substrings from large to small (25 chars smallest)
+        for substringLength in range(stringLength // 2, minimumSubstringLength, -1): 
+            for startIndex in range(stringLength - substringLength + 1):
+                substring = string[startIndex : startIndex + substringLength]
+                # Check if the substring appears more than once
+                if 1 < string.count(substring):
+                    # delete second occurrence of longest duplicate substring
+                    firstEnd = string.find(substring) + len(substring)
+                    secondStart = string.find(substring, firstEnd)
+                    secondEnd = secondStart + len(substring)
+                    string = string[:secondStart] + string[secondEnd:]
+                    
+                    # recursively find new duplicate substrings
+                    string = Helpers.removeDuplicateSubstrings(string, minimumSubstringLength)
+                    return string
         
-        return daysSince2000
+        # all substrings checked and no duplicates
+        return string
+            
+
 
 def getFilename():
     while True:
@@ -93,36 +121,43 @@ def removeTimestampFromDates(data: list[list]):
             continue
         row[0] = row[0][:cutoffIndex]
 
+# RUN IN PLACE
 def convertDatesToDatetimeObjects(data: list[list]):
     for row in data:
         month, day, year = row[0].split('/')
         row[0] = datetime(int(year),int(month),int(day))
 
-# converts all money format to xx.xx
-def normalizeDollars(data: list[list]):
+# RUN IN PLACE
+def normalizeDollars(data: list[list]): # converts all money format to xx.xx
     for row in data:
         row[4] = Helpers.normalizeDollarsFormatting(row[4])
 
-def flattenCashnetItemNames(data: list[list]):
+# RUN IN PLACE
+def flattenItemNames(data: list[list]):
     for row in data:
-        if row[2].startswith('ECOM'):
+        itemName: str = row[2]
+
+        if itemName.startswith('ECOM'):
+            # flatten cashnet items to just say receipt number
             receiptNumber = row[2].split('-')[5]
             row[2] = receiptNumber
+        else:
+            # remove repetitive keywords
+            substitutionDict = {'all university orchestra' : 'AUO',
+                                'fy25 ' : '',
+                                'pcard verification ' : '',
+                                'auo - ' : '',
+                                'auo: ' : '',
+                                'other - auo; ' : '',
+                                "'" : '',
+                               }
+            itemName = Helpers.keywordSubstitution(itemName, substitutionDict)
+
+            # remove duplicate substrings
+            row[2] = Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
 
 # RUN IN PLACE
-def sortChronologically(data: list[list]):
-    # append days since 2000 to first column of each row so it can be sorted
-    for row in data:
-        row.insert(0, Helpers.daysSince2000(row[0]))
-    
-    data.sort()
-
-    # delete the temporary column used for the sort
-    for row in data:
-        del row[0]
-
-# delete transactions that are immediately followed by equivalent opposite transaction
-def removeExceptions(data: list[list]): # RUN IN PLACE
+def removeExceptions(data: list[list]): # delete transactions that are immediately followed by equivalent opposite transaction
     rowsToDelete = []
     rowNumber = 0
     while rowNumber < len(data)-1:
@@ -136,12 +171,14 @@ def removeExceptions(data: list[list]): # RUN IN PLACE
     for rowNumber in rowsToDelete:
         del data[rowNumber]
 
-def appendBalances(data: list[list]): # RUN IN PLACE
+# RUN IN PLACE
+def appendBalances(data: list[list]):
     balanceInCents = 0
     for row in data:
         balanceInCents += (Helpers.dollarsToCents(row[4]))
         row.append(Helpers.centsToDollars(balanceInCents))
 
+# RUN IN PLACE
 def change2ndColumnToCategory(data: list[list]):
     # keyPhrase, category
     dictByTartanConnectCategory = {
@@ -335,12 +372,16 @@ def main():
     agencyData, giftData = splitGiftAndAgency(allData)
     
     for data in agencyData, giftData:
-        # cleanup data formats
+        # cleanup dates
         removeTimestampFromDates(data)
         convertDatesToDatetimeObjects(data)
         data.sort() # sort chronologically
+    
+    discardNonCurrentFY(agencyData, giftData)
+
+    for data in agencyData, giftData:
         normalizeDollars(data)
-        flattenCashnetItemNames(data)
+        flattenItemNames(data)
 
         removeExceptions(data)
 
@@ -350,8 +391,7 @@ def main():
 
         # remove un-needed data
         removeTartanConnectCategory(data)
-        
-    discardNonCurrentFY(agencyData, giftData)
+    
     convertDatesBackToStrings(agencyData, giftData)
 
     addHeadings(agencyData)
