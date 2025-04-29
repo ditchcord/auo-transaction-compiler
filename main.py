@@ -156,8 +156,11 @@ def flattenItemNames(data: list[list]):
             # remove duplicate substrings
             row[2] = Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
 
+        # strip non alphanumeric characters
+        row[2] = row[2].strip(' -:;')
+
 # RUN IN PLACE
-def removeExceptions(data: list[list]): # delete transactions that are immediately followed by equivalent opposite transaction
+def removeExceptions(data: list[list]): # delete immediate transaction pairs that are equivalent and opposite to each other
     rowsToDelete = []
     rowNumber = 0
     while rowNumber < len(data)-1:
@@ -345,9 +348,13 @@ def discardNonCurrentFY(agencyData, giftData):
 
 
 # RUN IN PLACE
-def addHeadings(data):
+def addHeadings(data: list[list]):
     headings = ['Date','Category','Item','Amount','Remaining Balance']
     data.insert(0,headings)
+
+def deleteCategoryColumn(data: list[list]):
+    for row in data:
+        del row[1]
 
 # creates /private/[dateTimeNow] folder and returns folder path
 def createFolderInPrivate() -> str:
@@ -356,10 +363,10 @@ def createFolderInPrivate() -> str:
     os.makedirs(path)
     return path
 
-def exportFile(data: list[list], dataName: str, folderName: str): # filename DOES NOT include .csv
-    filename = f'{dataName}.csv'
+def exportFile(data: list[list], name: str, folderPath: str): # name DOES NOT include .csv
+    filename = f'{name}.csv'
 
-    with open(f'{folderName}/{filename}', 'w') as file:
+    with open(f'{folderPath}/{filename}', 'w') as file:
         csvWriter = csv.writer(file,delimiter=',')
         csvWriter.writerows(data)
 
@@ -376,20 +383,25 @@ def main():
         removeTimestampFromDates(data)
         convertDatesToDatetimeObjects(data)
         data.sort() # sort chronologically
+
+        # cleanup money format
+        normalizeDollars(data)
+        appendBalances(data)
+
+        # delete immediate transaction pairs that are equivalent and opposite to each other
+        removeExceptions(data)
     
     discardNonCurrentFY(agencyData, giftData)
 
     for data in agencyData, giftData:
-        normalizeDollars(data)
+        # remove repetitive keywords,
+        # flatten cashnet items to just say receipt number,
+        # remove duplicate substrings,
+        # strip non alphanumeric characters
         flattenItemNames(data)
 
-        removeExceptions(data)
-
-        # add useful information
-        appendBalances(data)
+        # keyword based categorization to replace TartanConnect category
         change2ndColumnToCategory(data)
-
-        # remove un-needed data
         removeTartanConnectCategory(data)
     
     convertDatesBackToStrings(agencyData, giftData)
@@ -414,6 +426,7 @@ def main():
         
         for category in categories:
             addHeadings(categories[category])
+            deleteCategoryColumn(categories[category])
             exportFile(categories[category], f'{accountName}[{category}]', path)
 
 

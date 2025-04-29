@@ -24,18 +24,19 @@
 4. A new folder with the current date & time will be created in the private folder with bunch of CSVs
 
 ## The output .csv's
-- **gift.csv** and **agency.csv** show all records for their respective accounts since the beginning of time (like 2019)
+- **gift.csv** and **agency.csv** show all records for their respective accounts
 - every other file is a list of items matching a category found within the gift or agency account
 - there are **7** spending categories and **3** revenue categories. Revenue categories start with **REVENUE--**
 - There won't be a file for any given account category if the program didn't find any items fitting into that category
 
 ## Why are there expenses in some revenue categories
-- Some categories like JFC and donations include expenses related to funding corrections or refunds and admin fees
-- It's just easier to treat those kinds of expenses as subtractions from the revenue
-- Otherwise, it might be a categorization mistake
+The **REVENUE--JFC** and **REVENUE--DONATIONS & FUNDRAISING** categories include relevant expenses such as admin fees, refunds,
+and fundraising supplies. It's just easier to treat those kinds of expenses as subtractions from the revenue. Expenses in other
+revenue categories or revenue in expense categories might be a categorization mistake.
 
 ## Troubleshooting
-If items are being put into the wrong category, go to the **change2ndColumnToCategory** function definition and add or reorganize the dictionaries.
+If items are being put into the wrong category, go to the **change2ndColumnToCategory** function definition and add or reorganize
+the dictionaries.
 
 Email wellsjason543 at gmail dot com for issues or questions
 
