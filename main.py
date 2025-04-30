@@ -352,9 +352,9 @@ def addHeadings(data: list[list]):
     headings = ['Date','Category','Item','Amount','Remaining Balance']
     data.insert(0,headings)
 
-def deleteCategoryColumn(data: list[list]):
+def deleteCategoryAndRemainColumns(data: list[list]):
     for row in data:
-        del row[1]
+        del row[4], row[1]
 
 # creates /private/[dateTimeNow] folder and returns folder path
 def createFolderInPrivate() -> str:
@@ -426,7 +426,7 @@ def main():
         
         for category in categories:
             addHeadings(categories[category])
-            deleteCategoryColumn(categories[category])
+            deleteCategoryAndRemainColumns(categories[category]) # don't need those columns for category records
             exportFile(categories[category], f'{accountName}[{category}]', path)
 
 
