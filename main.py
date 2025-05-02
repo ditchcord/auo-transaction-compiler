@@ -133,6 +133,11 @@ def normalizeDollars(data: list[list]): # converts all money format to xx.xx
         row[4] = Helpers.normalizeDollarsFormatting(row[4])
 
 # RUN IN PLACE
+def convertDatetimesBackToStrings(data):
+    for row in data:
+        row[0] = row[0].strftime('%Y/%m/%d')
+
+# RUN IN PLACE
 def flattenItemNames(data: list[list]):
     for row in data:
         itemName: str = row[2]
@@ -150,6 +155,7 @@ def flattenItemNames(data: list[list]):
                                 'auo: ' : '',
                                 'other - auo; ' : '',
                                 "'" : '',
+                                ';' : '',
                                }
             itemName = Helpers.keywordSubstitution(itemName, substitutionDict)
 
@@ -182,7 +188,7 @@ def appendBalances(data: list[list]):
         row.append(Helpers.centsToDollars(balanceInCents))
 
 # RUN IN PLACE
-def change2ndColumnToCategory(data: list[list]):
+def changeAccountColumnToCategory(data: list[list]):
     # keyPhrase, category
     dictByTartanConnectCategory = {
                                    'memberships' : 'REVENUE--DUES',
@@ -315,11 +321,10 @@ def removeTartanConnectCategory(data: list[list]):
     for row in data:
         del row[3]
 
-# RUN IN PLACE
-def convertDatesBackToStrings(agencyData, giftData):
-    for data in agencyData, giftData:
-        for row in data:
-            row[0] = row[0].strftime('%Y/%m/%d')
+def flattenGiftDonationNames(data: list[list]):
+    for row in data:
+        if row[1] == 'REVENUE--DONATIONS & FUNDRAISING':
+            row[2] = row[2].split('^')[0] # only save donator's name
 
 # RUN IN PLACE
 def discardNonCurrentFY(agencyData, giftData):
@@ -391,9 +396,12 @@ def main():
         # delete immediate transaction pairs that are equivalent and opposite to each other
         removeExceptions(data)
     
-    discardNonCurrentFY(agencyData, giftData)
+    discardNonCurrentFY(agencyData, giftData) # user prompted y/n
 
     for data in agencyData, giftData:
+
+        convertDatetimesBackToStrings(data)
+        
         # remove repetitive keywords,
         # flatten cashnet items to just say receipt number,
         # remove duplicate substrings,
@@ -401,14 +409,13 @@ def main():
         flattenItemNames(data)
 
         # keyword based categorization to replace TartanConnect category
-        change2ndColumnToCategory(data)
+        changeAccountColumnToCategory(data)
         removeTartanConnectCategory(data)
-    
-    convertDatesBackToStrings(agencyData, giftData)
+
+    flattenGiftDonationNames(giftData)
 
     addHeadings(agencyData)
     addHeadings(giftData)
-
 
     # export full accounting records
     path = createFolderInPrivate() # folder inside private folder to keep gitignored
