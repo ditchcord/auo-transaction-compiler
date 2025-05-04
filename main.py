@@ -74,18 +74,21 @@ class Helpers:
         
         # all substrings checked and no duplicates
         return string
-            
-
 
 def getFilename():
     while True:
-        csvFilename = input('Finance Record CSV: ')
+        csvFilename = input('\nFinance Record CSV: ')
+        print()
+
         if not csvFilename.endswith('.csv'): csvFilename += '.csv'
-        if isfile(csvFilename):
-            print()
-            return csvFilename
-        else:
-            print('Invalid file name\n')
+        if not isfile(csvFilename):
+            # try searching private folder
+            csvFilename = f'private/{csvFilename}'
+            if not isfile(csvFilename):
+                print('Invalid file name\n')
+                continue
+        
+        return csvFilename 
 
 # RUN IN PLACE
 def keepUsefulColumns(allData: list[list]):
