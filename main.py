@@ -39,7 +39,7 @@ class Helpers:
         return start + '.' + end
     
     @staticmethod
-    def keywordSubstitution(string: str, substitutionDict: dict): # recursively substitute keywords
+    def keywordSubstitution(string: str, substitutionDict: dict[str,str]): # recursively substitute keywords
         for keyword in substitutionDict:
             index = string.lower().find(keyword)
             if index == -1:
@@ -85,7 +85,7 @@ def getFilename():
             # try searching private folder
             csvFilename = f'private/{csvFilename}'
             if not isfile(csvFilename):
-                print('Invalid file name\n')
+                print('Invalid file name')
                 continue
         
         return csvFilename 
@@ -151,7 +151,7 @@ def flattenItemNames(data: list[list]):
             row[2] = receiptNumber
         else:
             # remove repetitive keywords
-            substitutionDict = {'all university orchestra' : 'AUO',
+            substitutionDict: dict[str, str] = {'all university orchestra' : 'AUO',
                                 'fy25 ' : '',
                                 'pcard verification ' : '',
                                 'auo - ' : '',
@@ -380,7 +380,8 @@ def exportFile(data: list[list], name: str, folderPath: str): # name DOES NOT in
 
 def main():
     csvFilename = getFilename()
-    allData: list[list] = list(csv.reader(open(csvFilename)))
+    with open(csvFilename) as file:
+        allData: list[list] = list(csv.reader(file))
 
     keepUsefulColumns(allData)
     moveDatesToFirstColumn(allData)
