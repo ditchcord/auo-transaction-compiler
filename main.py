@@ -1,55 +1,22 @@
 #
 # Jason H. Wells - wellsjason543 at gmail dot com - jwellsuhhuh (Discord)
-# updated 2025/04/21
-# 
-# "Finance Record CSV" is the exported finance record of everything downloaded from TartanConnect
 #
 
 import csv
 import os
 from os.path import isfile
 from datetime import datetime
+import re
 
-# dollars -> str
-# cents -> int
+from money import Money
+
 class Helpers:
     @staticmethod
-    def normalizeDollarsFormatting(dollars: str) -> str:
-        if '.' not in dollars:
-            return dollars + '.00'
-        elif dollars[-1] == '.':
-            return dollars + '00'
-        elif dollars[-2] == '.':
-            return dollars + '0'
-        elif dollars[-3] == '.':
-            return dollars
-        else:
-            raise TypeError(f'Invalid Dollars Format: {dollars}')
-
-    @staticmethod
-    def dollarsToCents(dollars: str) -> int: # requires normalized dollars
-        return int(dollars[:-3] + dollars[-2:])
-
-    @staticmethod
-    def centsToDollars(cents: int) -> str:
-        start = str(cents)[:-2]
-        end = str(cents)[-2:]
-
-        if start == '': start = '0'
-        return start + '.' + end
-    
-    @staticmethod
-    def keywordSubstitution(string: str, substitutionDict: dict[str,str]): # recursively substitute keywords
+    def keywordSubstitution(string: str, substitutionDict: dict[str,str]): # substitute keywords
         for keyword in substitutionDict:
-            index = string.lower().find(keyword)
-            if index == -1:
-                continue
-            # substitute the keyword
-            string = string[:index] + substitutionDict[keyword] + string[index + len(keyword):]
-            # recurse
-            string = Helpers.keywordSubstitution(string, substitutionDict)
-            break
-        
+            # use re to find non-case-sensitive instances of keyword and substitute it
+            insensitiveKeyword: re.Pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+            string = insensitiveKeyword.sub(substitutionDict[keyword], string)
         return string
     
     @staticmethod
@@ -69,137 +36,91 @@ class Helpers:
                     string = string[:secondStart] + string[secondEnd:]
                     
                     # recursively find new duplicate substrings
-                    string = Helpers.removeDuplicateSubstrings(string, minimumSubstringLength)
-                    return string
+                    return Helpers.removeDuplicateSubstrings(string, minimumSubstringLength)
         
         # all substrings checked and no duplicates
         return string
 
-def getFilename():
-    while True:
-        csvFilename = input('\nFinance Record CSV: ')
-        print()
-
-        if not csvFilename.endswith('.csv'): csvFilename += '.csv'
-        if not isfile(csvFilename):
-            # try searching private folder
-            csvFilename = f'private/{csvFilename}'
-            if not isfile(csvFilename):
-                print('Invalid file name')
-                continue
-        
-        return csvFilename 
-
-# RUN IN PLACE
-def keepUsefulColumns(allData: list[list]):
-    keptColumns = (0,9,11,15,17) # account, item Name, TartanConnect category, amount, date
-
-    rowNumber = 0
-    for row in allData:
-        newRow = [row[index] for index in keptColumns]
-        allData[rowNumber] = newRow
-        rowNumber += 1
-
-def moveDatesToFirstColumn(allData: list[list]):
-    # date, account, item name, TartanConnect Category, amount
-    for row in allData:
-        row.insert(0, row.pop(4))
-
-def splitGiftAndAgency(allData: list[list]):
-    agencyData: list[list] = []
-    giftData: list[list] = []
-
-    for row in allData[1:]:
-        if row[1].startswith('Agency'):
-            agencyData.append(row)
-        else: giftData.append(row)
+class Transaction:
+    def __init__(self, transactionData: list):
+        self.account: str = transactionData[0]
+        self.amount: Money = Money(transactionData[15]) 
+        self.date: datetime = Transaction.processDate(transactionData[17])
+        self.itemName: str = Transaction.flattenItemName(transactionData[9])
+        self.category: str = Transaction.updateCategory(transactionData[11], self.itemName, self.amount, self.account)
     
-    return agencyData, giftData
+    def __repr__(self): # NOT ACTUAL REPR
+        return f'Transaction({self.account},{self.date},{self.category},{self.itemName},{self.amount}'
 
-# RUN IN PLACE
-def removeTimestampFromDates(data: list[list]):
-    for row in data:
-        cutoffIndex = row[0].find(' ')
-        if cutoffIndex == -1:
-            continue
-        row[0] = row[0][:cutoffIndex]
+    @staticmethod
+    def processDate(rawDate: str) -> datetime:
+        # remove timestamp
+        cutoffIndex = rawDate.find(' ')
+        date = rawDate[:cutoffIndex] if cutoffIndex != -1 else rawDate
+        
+        # convert to datetime
+        month, day, year = date.split('/')
+        return datetime(int(year),int(month),int(day))
 
-# RUN IN PLACE
-def convertDatesToDatetimeObjects(data: list[list]):
-    for row in data:
-        month, day, year = row[0].split('/')
-        row[0] = datetime(int(year),int(month),int(day))
-
-# RUN IN PLACE
-def normalizeDollars(data: list[list]): # converts all money format to xx.xx
-    for row in data:
-        row[4] = Helpers.normalizeDollarsFormatting(row[4])
-
-# RUN IN PLACE
-def convertDatetimesBackToStrings(data):
-    for row in data:
-        row[0] = row[0].strftime('%Y/%m/%d')
-
-# RUN IN PLACE
-def flattenItemNames(data: list[list]):
-    for row in data:
-        itemName: str = row[2]
-
-        if itemName.startswith('ECOM'):
-            # flatten cashnet items to just say receipt number
-            receiptNumber = row[2].split('-')[5]
-            row[2] = receiptNumber
-        else:
-            # remove repetitive keywords
-            substitutionDict: dict[str, str] = {'all university orchestra' : 'AUO',
-                                'fy25 ' : '',
-                                'pcard verification ' : '',
-                                'auo - ' : '',
-                                'auo: ' : '',
-                                'other - auo; ' : '',
-                                "'" : '',
-                                ';' : '',
-                               }
-            itemName = Helpers.keywordSubstitution(itemName, substitutionDict)
-
-            # remove duplicate substrings
-            row[2] = Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
+    @staticmethod
+    def flattenItemName(rawItemName: str) -> str:
+        # flatten cashnet items to just say receipt number
+        if rawItemName.startswith('ECOM'):
+            receiptNumber = rawItemName.split('-')[5]
+            return receiptNumber
+        
+        # flatten gift donations to just say donator's name
+        if 'JA5' in rawItemName:
+            return rawItemName.split('^')[0] # only save donator's name
 
         # strip non alphanumeric characters
-        row[2] = row[2].strip(' -:;')
+        itemName = rawItemName.strip(' -:;')
 
-# RUN IN PLACE
-def removeExceptions(data: list[list]): # delete immediate transaction pairs that are equivalent and opposite to each other
-    rowsToDelete = []
-    rowNumber = 0
-    while rowNumber < len(data)-1:
-        if Helpers.dollarsToCents(data[rowNumber][4]) == -Helpers.dollarsToCents(data[rowNumber+1][4]):
-            rowsToDelete.extend([rowNumber, rowNumber+1])
-            rowNumber += 2
-        else:
-            rowNumber += 1
+        # remove repetitive keywords
+        substitutionDict: dict[str, str] = {'all university orchestra' : 'AUO',
+                                            'fy25 ' : '',
+                                            'pcard verification ' : '',
+                                            'auo - ' : '',
+                                            'auo: ' : '',
+                                            'other - auo; ' : '',
+                                            "'" : '',
+                                            ';' : '',
+                                            '  ' : ' ',
+                                           }
+        
+        itemName = Helpers.keywordSubstitution(itemName, substitutionDict)
+
+        # remove duplicate substrings
+        return Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
+
+    @staticmethod
+    def updateCategory(rawCategory: str, itemName: str, amount: Money, account: str) -> str:
+        # search for key phrase matches in tartan connect category
+        for keyPhrase in Categories.dictByRawCategory:
+            if keyPhrase in rawCategory.lower():
+                return Categories.dictByRawCategory[keyPhrase]
+        
+        # search for key phrase matches in item name
+        for keyPhrase in Categories.dictByItemName:
+            if keyPhrase in itemName.lower():
+                return Categories.dictByItemName[keyPhrase]
     
-    rowsToDelete.reverse() # delete in backwards order to avoid messing subsequent indexes
-    for rowNumber in rowsToDelete:
-        del data[rowNumber]
+        # no key phrase found - apply default category
+        if amount.inCents < 0: 
+            return 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
+        if account == 'Gift Account':
+            return 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
+        else: 
+            return 'REVENUE--JFC' # default agency revenue category
 
-# RUN IN PLACE
-def appendBalances(data: list[list]):
-    balanceInCents = 0
-    for row in data:
-        balanceInCents += (Helpers.dollarsToCents(row[4]))
-        row.append(Helpers.centsToDollars(balanceInCents))
-
-# RUN IN PLACE
-def changeAccountColumnToCategory(data: list[list]):
-    # keyPhrase, category
-    dictByTartanConnectCategory = {
-                                   'memberships' : 'REVENUE--DUES',
-                                   'other student/staff revenue' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                   'meal' : 'SOCIALS & GIFTS & MERCH',
-                                   'car' : 'OTHER CONCERT EXPENSES',
-                                   'travel' : 'OTHER CONCERT EXPENSES',
-                                  }
+class Categories:
+    dictByRawCategory = {
+                         'memberships' : 'REVENUE--DUES',
+                         'other student/staff revenue' : 'REVENUE--DONATIONS & FUNDRAISING',
+                         'meal' : 'SOCIALS & GIFTS & MERCH',
+                         'car' : 'OTHER CONCERT EXPENSES',
+                         'travel' : 'OTHER CONCERT EXPENSES',
+                        }
     
     dictByItemName = {
                       # one-offs 
@@ -219,12 +140,12 @@ def changeAccountColumnToCategory(data: list[list]):
                       'guest' : 'GUEST COACHES & PERFORMERS',
                       'coach' : 'GUEST COACHES & PERFORMERS',
                       'speak' : 'GUEST COACHES & PERFORMERS',
-                      
+                    
                       'ja5' : 'REVENUE--DONATIONS & FUNDRAISING',
                       'giving' : 'REVENUE--DONATIONS & FUNDRAISING',
                       'donat' : 'REVENUE--DONATIONS & FUNDRAISING',
                       'admin fee' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      
+                    
                       'social' : 'SOCIALS & GIFTS & MERCH',
                       'flower' : 'SOCIALS & GIFTS & MERCH',
                       'shirt' : 'SOCIALS & GIFTS & MERCH',
@@ -270,7 +191,7 @@ def changeAccountColumnToCategory(data: list[list]):
                       'ink' : 'MUSIC',
                       'compos' : 'MUSIC',
                       'rented music' : 'MUSIC',
-                      
+                    
                       'allocation' : 'REVENUE--JFC',
                       'surplus' : 'REVENUE--JFC',
 
@@ -291,78 +212,90 @@ def changeAccountColumnToCategory(data: list[list]):
                       'services' : 'CONDUCTOR HONORARIUM',
                      }
 
-    
-    for row in data:
-        categoryFound = False
-        # search for key phrase matches in tartan connect category
-        for keyPhrase in dictByTartanConnectCategory:
-            if keyPhrase in row[3].lower():
-                row[1] = dictByTartanConnectCategory[keyPhrase]
-                categoryFound = True
-                break
-        if categoryFound: continue
+def getFilename():
+    while True:
+        csvFilename = input('\nFinance Record CSV: ')
+        print()
+
+        if not csvFilename.endswith('.csv'): csvFilename += '.csv'
+        if not isfile(csvFilename):
+            # try searching private folder
+            csvFilename = f'private/{csvFilename}'
+            if not isfile(csvFilename):
+                print('Invalid file name')
+                continue
         
-        # search for key phrase matches in item name
-        for keyPhrase in dictByItemName:
-            if keyPhrase in row[2].lower():
-                row[1] = dictByItemName[keyPhrase]
-                categoryFound = True
-                break
-        if categoryFound: continue
-    
-        # no key phrase found - apply default category
-        accountName: str = data[0][1]
-        if 0 < Helpers.dollarsToCents(row[4]):
-            if accountName == 'Gift Account':
-                row[1] = 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
-            else: row[1] = 'REVENUE--JFC' # default agency revenue category
+        return csvFilename 
+
+def splitGiftAndAgency(allTransactions: list[Transaction]):
+    agencyTransactions: list[Transaction] = []
+    giftTransactions: list[Transaction] = []
+
+    for transaction in allTransactions:
+        if transaction.account == 'Agency Account':
+            agencyTransactions.append(transaction)
         else:
-            row[1] = 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
+            giftTransactions.append(transaction)
+    
+    return agencyTransactions, giftTransactions
+
+def sortChronologically(transactions: list[Transaction]):
+    # sort by "date" attribute in each Transaction object
+    transactions.sort(key=lambda transaction: transaction.date)
 
 # RUN IN PLACE
-def removeTartanConnectCategory(data: list[list]):
+def convertDatetimesBackToStrings(data):
     for row in data:
-        del row[3]
-
-def flattenGiftDonationNames(data: list[list]):
-    for row in data:
-        if row[1] == 'REVENUE--DONATIONS & FUNDRAISING':
-            row[2] = row[2].split('^')[0] # only save donator's name
+        row[0] = row[0].strftime('%Y/%m/%d')
 
 # RUN IN PLACE
-def discardNonCurrentFY(agencyData, giftData):
+def removeExceptions(transactions: list[Transaction]): 
+    # find immediate transaction pairs that are equivalent and opposite to each other
+    indexesToDelete = []
+    index = 0
+    while index < len(transactions)-1:
+        if transactions[index].amount.inCents == -transactions[index+1].amount.inCents:
+            indexesToDelete.extend([index, index+1])
+            index += 2
+        else:
+            index += 1
+    
+    # delete in backwards order to avoid messing subsequent indexes
+    indexesToDelete.reverse() 
+    for index in indexesToDelete:
+        del transactions[index]
+
+# RUN IN PLACE
+def appendBalances(transactions: list[Transaction]):
+    balance = Money('0')
+    for transaction in transactions:
+        balance += transaction.amount
+        transaction.balance = balance # create new attribute for the Transaction object
+
+# RUN IN PLACE
+def discardNonCurrentFY(agencyTransactions: list[Transaction], giftTransactions: list[Transaction]):
     while True:
         isDiscarding = input('Discard transactions from previous fiscal years? (y/n): ')
         match isDiscarding:
             case 'y':
-                for data in agencyData, giftData:
-                    latestDate: datetime = data[-1][0]
+                for transactions in agencyTransactions, giftTransactions:
+                    latestDate: datetime = transactions[-1].date
                     if latestDate < datetime(latestDate.year,8,1): # spring semester
                         cutoffDate = datetime(latestDate.year-1,8,1)
                     else: # fall semester
                         cutoffDate = datetime(latestDate.year,8,1)
                     
                     # purge first index of list until cutoff is reached
-                    date: datetime = data[0][0]
+                    date: datetime = transactions[0].date
                     while date < cutoffDate:
-                        del data[0]
-                        date = data[0][0]
+                        del transactions[0]
+                        date = transactions[0].date
                 return
 
             case 'n':
                 return # do nothing
             case _:
                 print('Invalid response\n')
-
-
-# RUN IN PLACE
-def addHeadings(data: list[list]):
-    headings = ['Date','Category','Item','Amount','Remaining Balance']
-    data.insert(0,headings)
-
-def deleteCategoryAndRemainColumns(data: list[list]):
-    for row in data:
-        del row[4], row[1]
 
 # creates /private/[dateTimeNow] folder and returns folder path
 def createFolderInPrivate() -> str:
@@ -371,75 +304,74 @@ def createFolderInPrivate() -> str:
     os.makedirs(path)
     return path
 
-def exportFile(data: list[list], name: str, folderPath: str): # name DOES NOT include .csv
-    filename = f'{name}.csv'
-
+def exportFile(transactions: list[Transaction], filename: str, folderPath: str, categoryRecord=False):
+    # unpack Transaction objects into lists
+    data: list[list] = []
+    if categoryRecord:
+        for transaction in transactions:
+            data.append([transaction.date.strftime('%Y/%m/%d'), 
+                         transaction.itemName, 
+                         transaction.amount.inDollars])
+        headings = ['Date','Item Name','Amount']
+    else:
+        for transaction in transactions:
+            data.append([transaction.date.strftime('%Y/%m/%d'), 
+                         transaction.category, 
+                         transaction.itemName,
+                         transaction.amount.inDollars, 
+                         transaction.balance.inDollars])
+        headings = ['Date','Category','Item Name','Amount','Remaining Balance']   
+    
+    # insert headings
+    data.insert(0,headings)
+    
+    # create file and write csv data
     with open(f'{folderPath}/{filename}', 'w') as file:
         csvWriter = csv.writer(file,delimiter=',')
         csvWriter.writerows(data)
 
+def exportCategoryRecords(accountName: str, transactions: list[Transaction], path):
+    categories: dict[str, list[Transaction]] = dict()
+    for transaction in transactions:
+        if transaction.category not in categories:
+            categories[transaction.category] = [transaction]
+        else:
+            categories[transaction.category].append(transaction)
+    
+    for category in categories:
+        exportFile(categories[category], f'{accountName}[{category}].csv', path, categoryRecord=True)
+
 def main():
+    # parse the .csv from TartanConnect
     csvFilename = getFilename()
     with open(csvFilename) as file:
-        allData: list[list] = list(csv.reader(file))
+        allTransactionData: list[list] = list(csv.reader(file))
 
-    keepUsefulColumns(allData)
-    moveDatesToFirstColumn(allData)
-    agencyData, giftData = splitGiftAndAgency(allData)
+    # create a list of Transaction objects using each row of the csv
+    allTransactions: list[Transaction] = []
+    for transactionData in allTransactionData[1:]:
+        allTransactions.append(Transaction(transactionData))
     
-    for data in agencyData, giftData:
-        # cleanup dates
-        removeTimestampFromDates(data)
-        convertDatesToDatetimeObjects(data)
-        data.sort() # sort chronologically
-
-        # cleanup money format
-        normalizeDollars(data)
-        appendBalances(data)
-
-        # delete immediate transaction pairs that are equivalent and opposite to each other
-        removeExceptions(data)
+    # split Agency and Gift transactions into separate lists
+    agencyTransactions, giftTransactions = splitGiftAndAgency(allTransactions)
     
-    discardNonCurrentFY(agencyData, giftData) # user prompted y/n
-
-    for data in agencyData, giftData:
-
-        convertDatetimesBackToStrings(data)
-        
-        # remove repetitive keywords,
-        # flatten cashnet items to just say receipt number,
-        # remove duplicate substrings,
-        # strip non alphanumeric characters
-        flattenItemNames(data)
-
-        # keyword based categorization to replace TartanConnect category
-        changeAccountColumnToCategory(data)
-        removeTartanConnectCategory(data)
-
-    flattenGiftDonationNames(giftData)
-
-    addHeadings(agencyData)
-    addHeadings(giftData)
+    # cleanup process for each account
+    for transactions in agencyTransactions, giftTransactions:
+        sortChronologically(transactions)
+        removeExceptions(transactions) # delete immediate transaction pairs that are equivalent and opposite to each other
+        appendBalances(transactions)
+    
+    # discard everything from previous years? user prompted y/n
+    discardNonCurrentFY(agencyTransactions, giftTransactions)
 
     # export full accounting records
     path = createFolderInPrivate() # folder inside private folder to keep gitignored
-    exportFile(agencyData, 'agency', path)
-    exportFile(giftData, 'gift', path)
+    exportFile(agencyTransactions, 'agency.csv', path)
+    exportFile(giftTransactions, 'gift.csv', path)
 
     # export category records
-    for accountName, data in (('agency',agencyData[1:]), ('gift',giftData[1:])):
-        categories: dict[str, list[list]] = dict()
-        for row in data:
-            if row[1] not in categories:
-                categories[row[1]] = [row]
-            else:
-                categories[row[1]].append(row)
-        
-        for category in categories:
-            addHeadings(categories[category])
-            deleteCategoryAndRemainColumns(categories[category]) # don't need those columns for category records
-            exportFile(categories[category], f'{accountName}[{category}]', path)
-
+    exportCategoryRecords('agency', agencyTransactions, path)
+    exportCategoryRecords('gift', giftTransactions, path)
 
 if __name__ == '__main__':
     main()
