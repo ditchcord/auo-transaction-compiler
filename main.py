@@ -46,8 +46,8 @@ class Transaction:
         self.account: str = transactionData[0]
         self.amount: Money = Money(transactionData[15]) 
         self.date: datetime = Transaction.processDate(transactionData[17])
+        self.category: str = Transaction.updateCategory(transactionData[11], transactionData[9], self.amount, self.account)
         self.itemName: str = Transaction.flattenItemName(transactionData[9])
-        self.category: str = Transaction.updateCategory(transactionData[11], self.itemName, self.amount, self.account)
     
     def __repr__(self): # NOT ACTUAL REPR
         return f'Transaction({self.account},{self.date},{self.category},{self.itemName},{self.amount}'
@@ -71,40 +71,31 @@ class Transaction:
         
         # flatten gift donations to just say donator's name
         if 'JA5' in rawItemName:
-            return rawItemName.split('^')[0] # only save donator's name
-
-        # strip non alphanumeric characters
-        itemName = rawItemName.strip(' -:;')
-
-        # remove repetitive keywords
-        substitutionDict: dict[str, str] = {'all university orchestra' : 'AUO',
-                                            'fy25 ' : '',
-                                            'pcard verification ' : '',
-                                            'auo - ' : '',
-                                            'auo: ' : '',
-                                            'other - auo; ' : '',
-                                            "'" : '',
-                                            ';' : '',
-                                            '  ' : ' ',
-                                           }
+            itemName = rawItemName.split('^')[0] # only save donator's name
+        else:
+            itemName = rawItemName
         
-        itemName = Helpers.keywordSubstitution(itemName, substitutionDict)
+        # remove repetitive keywords
+        itemName = Helpers.keywordSubstitution(itemName, Dicts.itemKeywordSubstitutionDict)
+
+        # strip leading and trailing whitespace
+        itemName = itemName.strip()
 
         # remove duplicate substrings
         return Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
 
     @staticmethod
     def updateCategory(rawCategory: str, itemName: str, amount: Money, account: str) -> str:
-        # search for key phrase matches in tartan connect category
-        for keyPhrase in Categories.dictByRawCategory:
-            if keyPhrase in rawCategory.lower():
-                return Categories.dictByRawCategory[keyPhrase]
-        
         # search for key phrase matches in item name
-        for keyPhrase in Categories.dictByItemName:
-            if keyPhrase in itemName.lower():
-                return Categories.dictByItemName[keyPhrase]
-    
+        for keyword in Dicts.categoryByItemNameKeywordDict:
+            if keyword in itemName.lower():
+                return Dicts.categoryByItemNameKeywordDict[keyword]
+        
+        # search for key phrase matches in tartan connect category
+        for keyword in Dicts.categoryByRawCategoryKeywordDict:
+            if keyword in rawCategory.lower():
+                return Dicts.categoryByRawCategoryKeywordDict[keyword]
+
         # no key phrase found - apply default category
         if amount.inCents < 0: 
             return 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
@@ -113,104 +104,118 @@ class Transaction:
         else: 
             return 'REVENUE--JFC' # default agency revenue category
 
-class Categories:
-    dictByRawCategory = {
-                         'memberships' : 'REVENUE--DUES',
-                         'other student/staff revenue' : 'REVENUE--DONATIONS & FUNDRAISING',
-                         'meal' : 'SOCIALS & GIFTS & MERCH',
-                         'car' : 'OTHER CONCERT EXPENSES',
-                         'travel' : 'OTHER CONCERT EXPENSES',
-                        }
+class Dicts:
+    itemKeywordSubstitutionDict = {'all university orchestra' : 'AUO',
+                                   'fy25 ' : '',
+                                   'pcard verification ' : '',
+                                   'auo - ' : '',
+                                   'auo: ' : '',
+                                   'other - auo; ' : '',
+                                   "'" : '',
+                                   ';' : '',
+                                   ':' : '',
+                                   '-' : '',
+                                   '  ' : ' ',
+                                  }
     
-    dictByItemName = {
-                      # one-offs 
-                      'theodore' : 'MUSIC',
-                      'lucks' : 'MUSIC',
-                      'knoxville' : 'MUSIC',
-                      'oracle' : 'GUEST COACHES & PERFORMERS',
-                      'tarantino' : 'GUEST COACHES & PERFORMERS',
-                      'raffle' : 'SOCIALS & GIFTS & MERCH',
-                      'karoke' : 'SOCIALS & GIFTS & MERCH',
-                      'coffee' : 'SOCIALS & GIFTS & MERCH',
-                      'bagel' : 'SOCIALS & GIFTS & MERCH',
-                      'chalk' : 'OTHER CONCERT EXPENSES',
+    categoryByRawCategoryKeywordDict = {
+                                        'memberships' : 'REVENUE--DUES',
+                                        'other student/staff revenue' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                        'meal' : 'SOCIALS & GIFTS & MERCH',
+                                        'car' : 'OTHER CONCERT EXPENSES',
+                                        'travel' : 'OTHER CONCERT EXPENSES',
+                                       }
+    
+    categoryByItemNameKeywordDict = {
+                                     # one-offs 
+                                     'theodore' : 'MUSIC',
+                                     'lucks' : 'MUSIC',
+                                     'knoxville' : 'MUSIC',
+                                     'purchased music' : 'MUSIC',
+                                     'rented music' : 'MUSIC',
+                                     'rental of music' : 'MUSIC',
+                                     'oracle' : 'GUEST COACHES & PERFORMERS',
+                                     'tarantino' : 'GUEST COACHES & PERFORMERS',
+                                     'raffle' : 'SOCIALS & GIFTS & MERCH',
+                                     'karoke' : 'SOCIALS & GIFTS & MERCH',
+                                     'coffee' : 'SOCIALS & GIFTS & MERCH',
+                                     'bagel' : 'SOCIALS & GIFTS & MERCH',
+                                     'chalk' : 'OTHER CONCERT EXPENSES',
 
-                      # common keywords
-                      'journal' : 'GUEST COACHES & PERFORMERS',
-                      'guest' : 'GUEST COACHES & PERFORMERS',
-                      'coach' : 'GUEST COACHES & PERFORMERS',
-                      'speak' : 'GUEST COACHES & PERFORMERS',
-                    
-                      'ja5' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      'giving' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      'donat' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      'admin fee' : 'REVENUE--DONATIONS & FUNDRAISING',
-                    
-                      'social' : 'SOCIALS & GIFTS & MERCH',
-                      'flower' : 'SOCIALS & GIFTS & MERCH',
-                      'shirt' : 'SOCIALS & GIFTS & MERCH',
-                      'hoodie' : 'SOCIALS & GIFTS & MERCH',
-                      'ticket' : 'SOCIALS & GIFTS & MERCH',
-                      'custom ink' : 'SOCIALS & GIFTS & MERCH',
-                      'paint' : 'SOCIALS & GIFTS & MERCH',
+                                     # common keywords
+                                     'journal' : 'GUEST COACHES & PERFORMERS',
+                                     'guest' : 'GUEST COACHES & PERFORMERS',
+                                     'coach' : 'GUEST COACHES & PERFORMERS',
+                                     'speak' : 'GUEST COACHES & PERFORMERS',
+                                     'musical' : 'GUEST COACHES & PERFORMERS',
+                                    
+                                     'ja5' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'giving' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'donat' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'admin fee' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                    
+                                     'social' : 'SOCIALS & GIFTS & MERCH',
+                                     'pizza' : 'SOCIALS & GIFTS & MERCH',
+                                     'flower' : 'SOCIALS & GIFTS & MERCH',
+                                     'shirt' : 'SOCIALS & GIFTS & MERCH',
+                                     'hoodie' : 'SOCIALS & GIFTS & MERCH',
+                                     'ticket' : 'SOCIALS & GIFTS & MERCH',
+                                     'paint' : 'SOCIALS & GIFTS & MERCH',
+                                     'custom ink' : 'SOCIALS & GIFTS & MERCH',
 
-                      'haul' : 'OTHER CONCERT EXPENSES',
-                      'ratchet' : 'OTHER CONCERT EXPENSES',
-                      'stream' : 'OTHER CONCERT EXPENSES',
-                      'video' : 'OTHER CONCERT EXPENSES',
-                      'record' : 'OTHER CONCERT EXPENSES',
-                      'lighting' : 'OTHER CONCERT EXPENSES',
-                      'tech' : 'OTHER CONCERT EXPENSES',
-                      'advert' : 'OTHER CONCERT EXPENSES',
-                      'poster' : 'OTHER CONCERT EXPENSES',
+                                     'haul' : 'OTHER CONCERT EXPENSES',
+                                     'ratchet' : 'OTHER CONCERT EXPENSES',
+                                     'stream' : 'OTHER CONCERT EXPENSES',
+                                     'video' : 'OTHER CONCERT EXPENSES',
+                                     'record' : 'OTHER CONCERT EXPENSES',
+                                     'lighting' : 'OTHER CONCERT EXPENSES',
+                                     'tech' : 'OTHER CONCERT EXPENSES',
+                                     'advert' : 'OTHER CONCERT EXPENSES',
+                                     'poster' : 'OTHER CONCERT EXPENSES',
 
-                      'klefstad' : 'CONDUCTOR HONORARIUM',
-                      'music director' : 'CONDUCTOR HONORARIUM',
-                      'conductor' : 'CONDUCTOR HONORARIUM',
-                      'mandatory benefits' : 'CONDUCTOR HONORARIUM',
-                      'jeffrey' : 'CONDUCTOR HONORARIUM',
+                                     'music director' : 'CONDUCTOR HONORARIUM',
+                                     'conductor' : 'CONDUCTOR HONORARIUM',
+                                     'mandatory benefits' : 'CONDUCTOR HONORARIUM',
+                                     'jeffrey' : 'CONDUCTOR HONORARIUM',
+                                     'j.klefstad' : 'CONDUCTOR HONORARIUM',
 
-                      'dues received' : 'REVENUE--DUES',
+                                     'carnegie' : 'CONCERT VENUE FEE',
+                                     ' venue' : 'CONCERT VENUE FEE',
+                                     'deposit' : 'CONCERT VENUE FEE',
+                                     'balance payment' : 'CONCERT VENUE FEE',
+                                     'piano tuning' : 'CONCERT VENUE FEE',
 
-                      'carnegie' : 'CONCERT VENUE FEE',
-                      'venue' : 'CONCERT VENUE FEE',
-                      'deposit' : 'CONCERT VENUE FEE',
-                      'balance payment' : 'CONCERT VENUE FEE',
-                      'piano tuning' : 'CONCERT VENUE FEE',
-                      'sailor' : 'CONCERT VENUE FEE',
+                                     'mute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'string' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'bass' : 'INSTRUMENTS & SUPPLIES & OTHERS',
 
-                      'mute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-                      'string' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-                      'bass' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'domain' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'cabinet' : 'INSTRUMENTS & SUPPLIES & OTHERS',
 
-                      'sheet' : 'MUSIC',
-                      'score' : 'MUSIC',
-                      'piece' : 'MUSIC',
-                      'print' : 'MUSIC',
-                      'copy' : 'MUSIC',
-                      'ink' : 'MUSIC',
-                      'compos' : 'MUSIC',
-                      'rented music' : 'MUSIC',
-                    
-                      'allocation' : 'REVENUE--JFC',
-                      'surplus' : 'REVENUE--JFC',
+                                     'sheet' : 'MUSIC',
+                                     'score' : 'MUSIC',
+                                     'piece' : 'MUSIC',
+                                     'print' : 'MUSIC',
+                                     'copy' : 'MUSIC',
+                                     'ink' : 'MUSIC',
+                                     'compos' : 'MUSIC',
+                                    
+                                     'allocation' : 'REVENUE--JFC',
+                                     'surplus' : 'REVENUE--JFC',
 
-                      'domain' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-                      'cabinet' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'fundrais' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'whipped' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'sales tax' : 'REVENUE--DONATIONS & FUNDRAISING',
 
-                      'fundrais' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      'whipped' : 'REVENUE--DONATIONS & FUNDRAISING',
-                      'sales tax' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'dues' : 'REVENUE--DUES',
 
-                      # more general keywords
-                      'instrument' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-                      'preparation' : 'OTHER CONCERT EXPENSES',
-                      'distributors' : 'MUSIC',
-                      'flute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-                      'gift' : 'SOCIALS & GIFTS & MERCH',
-                      'orchestra-' : 'GUEST COACHES & PERFORMERS',
-                      'services' : 'CONDUCTOR HONORARIUM',
-                     }
+                                     # more general keywords
+                                     'instrument' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'flute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'preparation' : 'OTHER CONCERT EXPENSES',
+                                     'distributors' : 'MUSIC',
+                                     'services' : 'CONDUCTOR HONORARIUM',
+                                    }
 
 def getFilename():
     while True:
