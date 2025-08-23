@@ -2,13 +2,15 @@
 # Jason H. Wells - wellsjason543 at gmail dot com - jwellsuhhuh (Discord)
 #
 
+# local dependencies
+from money import Money
+
 import csv
-import os
+import os # for folder creation
 from os.path import isfile
 from datetime import datetime
-import re
+import re # for keyword substitution
 
-from money import Money
 
 class Helpers:
     @staticmethod
@@ -162,6 +164,7 @@ class Dicts:
                                      'ticket' : 'SOCIALS & GIFTS & MERCH',
                                      'paint' : 'SOCIALS & GIFTS & MERCH',
                                      'custom ink' : 'SOCIALS & GIFTS & MERCH',
+                                     'sticker' : 'SOCIALS & GIFTS & MERCH',
 
                                      'haul' : 'OTHER CONCERT EXPENSES',
                                      'ratchet' : 'OTHER CONCERT EXPENSES',
@@ -169,13 +172,13 @@ class Dicts:
                                      'video' : 'OTHER CONCERT EXPENSES',
                                      'record' : 'OTHER CONCERT EXPENSES',
                                      'lighting' : 'OTHER CONCERT EXPENSES',
+                                     'audio' : 'OTHER CONCERT EXPENSES',
                                      'tech' : 'OTHER CONCERT EXPENSES',
                                      'advert' : 'OTHER CONCERT EXPENSES',
                                      'poster' : 'OTHER CONCERT EXPENSES',
 
                                      'music director' : 'CONDUCTOR HONORARIUM',
                                      'conductor' : 'CONDUCTOR HONORARIUM',
-                                     'mandatory benefits' : 'CONDUCTOR HONORARIUM',
                                      'jeffrey' : 'CONDUCTOR HONORARIUM',
                                      'j.klefstad' : 'CONDUCTOR HONORARIUM',
 
@@ -188,8 +191,8 @@ class Dicts:
                                      'mute' : 'INSTRUMENTS & SUPPLIES & OTHERS',
                                      'string' : 'INSTRUMENTS & SUPPLIES & OTHERS',
                                      'bass' : 'INSTRUMENTS & SUPPLIES & OTHERS',
-
                                      'domain' : 'INSTRUMENTS & SUPPLIES & OTHERS',
+                                     'ssl' : 'INSTRUMENTS & SUPPLIES & OTHERS',
                                      'cabinet' : 'INSTRUMENTS & SUPPLIES & OTHERS',
 
                                      'sheet' : 'MUSIC',
@@ -206,6 +209,7 @@ class Dicts:
                                      'fundrais' : 'REVENUE--DONATIONS & FUNDRAISING',
                                      'whipped' : 'REVENUE--DONATIONS & FUNDRAISING',
                                      'sales tax' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'mandatory benefits' : 'REVENUE--DONATIONS & FUNDRAISING',
 
                                      'dues' : 'REVENUE--DUES',
 
@@ -278,29 +282,30 @@ def appendBalances(transactions: list[Transaction]):
         transaction.balance = balance # create new attribute for the Transaction object
 
 # RUN IN PLACE
-def discardNonCurrentFY(agencyTransactions: list[Transaction], giftTransactions: list[Transaction]):
+def keepOnlyWantedFY(agencyTransactions: list[Transaction], giftTransactions: list[Transaction]):
     while True:
-        isDiscarding = input('Discard transactions from previous fiscal years? (y/n): ')
-        match isDiscarding:
-            case 'y':
-                for transactions in agencyTransactions, giftTransactions:
-                    latestDate: datetime = transactions[-1].date
-                    if latestDate < datetime(latestDate.year,8,1): # spring semester
-                        cutoffDate = datetime(latestDate.year-1,8,1)
-                    else: # fall semester
-                        cutoffDate = datetime(latestDate.year,8,1)
-                    
-                    # purge first index of list until cutoff is reached
-                    date: datetime = transactions[0].date
-                    while date < cutoffDate:
-                        del transactions[0]
-                        date = transactions[0].date
-                return
+        fiscalYear = input('[Opt.] Input 2-digit fiscal year (FY) to show transactions from: ')
+        if fiscalYear == '':
+            return
+        
+        elif bool(re.fullmatch(r'\d{2}', fiscalYear)): # only 2 digits eg. '25'
+            fiscalYear = 2000 + int(fiscalYear)
+            for transactions in agencyTransactions, giftTransactions:
+                # fiscal year starts the PREVIOUS August 13th
+                purgeUntilDate = datetime(fiscalYear-1, 8, 13)
+                purgeAfterDate = datetime(fiscalYear, 8, 12)
 
-            case 'n':
-                return # do nothing
-            case _:
-                print('Invalid response\n')
+                # purge transactions before specified fiscal year
+                while len(transactions) != 0 and transactions[0].date < purgeUntilDate:
+                    del transactions[0]
+
+                # purge transactions after specified fiscal year
+                while len(transactions) != 0 and purgeAfterDate < transactions[-1].date:
+                    transactions.pop()
+            return
+
+        else:
+            print('Invalid response\n')
 
 # creates /private/[dateTimeNow] folder and returns folder path
 def createFolderInPrivate() -> str:
@@ -321,11 +326,11 @@ def exportFile(transactions: list[Transaction], filename: str, folderPath: str, 
     else:
         for transaction in transactions:
             data.append([transaction.date.strftime('%Y/%m/%d'), 
-                         transaction.category, 
+                         transaction.category,
                          transaction.itemName,
-                         transaction.amount.inDollars, 
+                         transaction.amount.inDollars,
                          transaction.balance.inDollars])
-        headings = ['Date','Category','Item Name','Amount','Remaining Balance']   
+        headings = ['Date','Category','Item Name','Amount','Remaining Balance']
     
     # insert headings
     data.insert(0,headings)
@@ -367,7 +372,7 @@ def main():
         appendBalances(transactions)
     
     # discard everything from previous years? user prompted y/n
-    discardNonCurrentFY(agencyTransactions, giftTransactions)
+    keepOnlyWantedFY(agencyTransactions, giftTransactions)
 
     # export full accounting records
     path = createFolderInPrivate() # folder inside private folder to keep gitignored
