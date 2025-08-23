@@ -35,8 +35,8 @@ and fundraising supplies. It's just easier to treat those kinds of expenses as s
 revenue categories or revenue in expense categories might be a categorization mistake.
 
 ## Troubleshooting
-If items are being put into the wrong category, go to the **change2ndColumnToCategory** function definition and add or reorganize
-the dictionaries.
+If items are being put into the wrong category, go to **keywordDicts.py** and add to or reorder
+the dictionary entries.
 
 Email wellsjason543 at gmail dot com for issues or questions
 
@@ -49,10 +49,9 @@ MOST RIGHTS RESERVED - DISTRIBUTION PROHIBITED
 Permission is hereby granted, free of charge, to any person 
 obtaining a copy of this software and associated documentation 
 files (the "Software"), to use, modify, or merge the Software on 
-their personal computer. The following rights are reserved: To 
-publish, distribute, sublicense, and/or sell copies of the 
-Software or modified versions of the Software, including 
-anything merged with the Software.
+their personal computer. You may NOT publish, distribute, sublicense, 
+and/or sell copies of the Software or modified versions of the Software, 
+including anything merged with the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
