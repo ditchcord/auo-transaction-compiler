@@ -100,7 +100,7 @@ class Transaction:
 
         # no key phrase found - apply default category
         if amount.inCents < 0: 
-            return 'INSTRUMENTS & SUPPLIES & OTHERS' # default agency/gift expense category
+            return 'NO-CATEGORY' # default agency/gift expense category
         if account == 'Gift Account':
             return 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
         else: 
