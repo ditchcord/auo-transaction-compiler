@@ -30,11 +30,13 @@ class Dicts:
                                      'rental of music' : 'MUSIC',
                                      'oracle' : 'GUEST COACHES & PERFORMERS',
                                      'tarantino' : 'GUEST COACHES & PERFORMERS',
+                                     'presentation' : 'GUEST COACHES & PERFORMERS',
                                      'raffle' : 'SOCIAL',
                                      'karoke' : 'SOCIAL',
                                      'coffee' : 'SOCIAL',
                                      'bagel' : 'SOCIAL',
                                      'chalk' : 'OTHER CONCERT EXPENSES',
+                                     'rental of soldiers' : 'CONCERT VENUE FEE',
 
                                      # common keywords
                                      'journal' : 'GUEST COACHES & PERFORMERS',
@@ -80,21 +82,21 @@ class Dicts:
                                      'balance payment' : 'CONCERT VENUE FEE',
                                      'piano tuning' : 'CONCERT VENUE FEE',
 
+                                     'sheet music' : 'MUSIC',
+                                     'music sheet' : 'MUSIC',
+                                     'music piece' : 'MUSIC',
+                                     'score' : 'MUSIC',
+                                     'print' : 'MUSIC',
+                                     'copy' : 'MUSIC',
+                                     'ink' : 'MUSIC',
+                                     'compos' : 'MUSIC',
+
                                      'mute' : 'EQUIPMENT',
                                      'string' : 'EQUIPMENT',
                                      'bass' : 'EQUIPMENT',
                                      'domain' : 'EQUIPMENT',
                                      'ssl' : 'EQUIPMENT',
                                      'cabinet' : 'EQUIPMENT',
-                                     'supplies' : 'EQUIPMENT',
-
-                                     'sheet' : 'MUSIC',
-                                     'score' : 'MUSIC',
-                                     'piece' : 'MUSIC',
-                                     'print' : 'MUSIC',
-                                     'copy' : 'MUSIC',
-                                     'ink' : 'MUSIC',
-                                     'compos' : 'MUSIC',
                                     
                                      'allocation' : 'REVENUE--JFC',
                                      'surplus' : 'REVENUE--JFC',
@@ -109,6 +111,7 @@ class Dicts:
                                      # more general keywords
                                      'instrument' : 'EQUIPMENT',
                                      'flute' : 'EQUIPMENT',
+                                     'supplies' : 'EQUIPMENT',
                                      'preparation' : 'OTHER CONCERT EXPENSES',
                                      'distributors' : 'MUSIC',
                                      'services' : 'CONDUCTOR HONORARIUM',
