@@ -53,7 +53,7 @@ Advertising for concerts is also allocated here. Poster printing and costs to de
 **SOCIAL**
 Expenses for food and purchases used for social events. Tickets to concerts or gifts. Merchandise expenses.
 
-**REVENUE--DONATIONS & FUNDRAISING**
+**REVENUE**
 Earnings from donations, anonymous donations, and earnings from fundraising. 
 Costs for fundraising supplies and admin fees are allocated here and treated as deductions from earnings. 
 Earnings from membership dues.
