@@ -13,8 +13,8 @@ class Dicts:
                                   }
     
     categoryByRawCategoryKeywordDict = {
-                                        'memberships' : 'REVENUE--DUES',
-                                        'other student/staff revenue' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                        'memberships' : 'REVENUE',
+                                        'other student/staff revenue' : 'REVENUE',
                                         'meal' : 'SOCIAL',
                                         'car' : 'OTHER CONCERT EXPENSES',
                                         'travel' : 'OTHER CONCERT EXPENSES',
@@ -45,10 +45,10 @@ class Dicts:
                                      'speak' : 'GUEST COACHES & PERFORMERS',
                                      'musical' : 'GUEST COACHES & PERFORMERS',
                                     
-                                     'ja5' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'giving' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'donat' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'admin fee' : 'REVENUE--DONATIONS & FUNDRAISING',
+                                     'ja5' : 'REVENUE',
+                                     'giving' : 'REVENUE',
+                                     'donat' : 'REVENUE',
+                                     'admin fee' : 'REVENUE',
                                     
                                      'social' : 'SOCIAL',
                                      'pizza' : 'SOCIAL',
@@ -98,15 +98,13 @@ class Dicts:
                                      'ssl' : 'EQUIPMENT',
                                      'cabinet' : 'EQUIPMENT',
                                     
-                                     'allocation' : 'REVENUE--JFC',
-                                     'surplus' : 'REVENUE--JFC',
-
-                                     'fundrais' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'whipped' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'sales tax' : 'REVENUE--DONATIONS & FUNDRAISING',
-                                     'mandatory benefits' : 'REVENUE--DONATIONS & FUNDRAISING',
-
-                                     'dues' : 'REVENUE--DUES',
+                                     'allocation' : 'REVENUE',
+                                     'surplus' : 'REVENUE',
+                                     'fundrais' : 'REVENUE',
+                                     'whipped' : 'REVENUE',
+                                     'sales tax' : 'REVENUE',
+                                     'mandatory benefits' : 'REVENUE',
+                                     'dues' : 'REVENUE',
 
                                      # more general keywords
                                      'instrument' : 'EQUIPMENT',

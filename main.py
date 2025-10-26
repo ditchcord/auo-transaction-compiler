@@ -101,10 +101,8 @@ class Transaction:
         # no key phrase found - apply default category
         if amount.inCents < 0: 
             return 'NO-CATEGORY' # default agency/gift expense category
-        if account == 'Gift Account':
-            return 'REVENUE--DONATIONS & FUNDRAISING' # default gift revenue category
-        else: 
-            return 'REVENUE--JFC' # default agency revenue category
+        else:
+            return 'REVENUE' # default revenue category
 
 def getFilename():
     while True:
