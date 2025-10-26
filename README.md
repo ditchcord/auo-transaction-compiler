@@ -37,7 +37,8 @@ Deposits and final payments for the rental of concert venues such as Soldiers an
 Monthly payments made to the current main conductor of AUO
 
 **EQUIPMENT**
-Instrument repair, rental, and accessories. Librarian supplies for organizing music such as cabinets, folders, stationary. Domain name and website expenses.
+Instrument repair, rental, and accessories. Librarian supplies for organizing music such as cabinets, folders, stationary.
+Domain name and website expenses.
 
 **GUEST COACHES & PERFORMERS**
 Expenses made to individual non-members to coach, perform, or speak at AUO events.
@@ -46,24 +47,22 @@ Expenses made to individual non-members to coach, perform, or speak at AUO event
 Sheet music purchase, rental, royalties, and printing costs.
 
 **OTHER CONCERT EXPENSES**
-Expenses for equipment rental used specifically for concerts such as Uhual rental and lighting and sound rental. Advertising for concerts is also allocated here. Poster printing and costs to design and deploy advertising for concerts.
+Expenses for equipment rental used specifically for concerts such as Uhual rental and lighting and sound rental. 
+Advertising for concerts is also allocated here. Poster printing and costs to design and deploy advertising for concerts.
 
 **SOCIAL**
 Expenses for food and purchases used for social events. Tickets to concerts or gifts. Merchandise expenses.
 
 **REVENUE--DONATIONS & FUNDRAISING**
-Earnings from donations, anonymous donations, and earnings from fundraising. Costs for fundraising supplies and admin fees are allocated here and treated as deductions from earnings. 
-
-**REVENUE--DUES**
+Earnings from donations, anonymous donations, and earnings from fundraising. 
+Costs for fundraising supplies and admin fees are allocated here and treated as deductions from earnings. 
 Earnings from membership dues.
-
-**REVENUE--JFC**
 Earnings from yearly JFC allocation. JFC close-out surplus is deducted from this category.
 
 ## Why are there expenses in some revenue categories
-The **REVENUE--JFC** and **REVENUE--DONATIONS & FUNDRAISING** categories include relevant expenses such as admin fees, refunds,
-and fundraising supplies. It's just easier to treat those kinds of expenses as subtractions from the revenue. Expenses in other
-revenue categories or revenue in expense categories are categorization mistakes and need to be fixed in **keywordDicts.py**.
+The **REVENUE** category includes relevant expenses such as admin fees, refunds, and fundraising supplies. 
+It's just easier to treat those kinds of expenses as subtractions from the revenue. 
+Revenue in expense categories might be categorization mistakes and need to be fixed in **keywordDicts.py**.
 
 ## Troubleshooting
 If items are being put into the wrong category, go to **keywordDicts.py** and add to or reorder
