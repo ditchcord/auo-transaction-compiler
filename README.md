@@ -21,7 +21,7 @@
 
 1. Install Python 3.10 or newer  
 2. Clone the repository to your device  
-3. Move your record .csv to the **private** folder (so that git pushes won't expose ppl's data)  
+3. Move your **record .csv** to the **private** folder (so that git pushes won't expose ppl's data)  
 3. Open main.py  
 4. Type the path of the file eg. private/record5  
 4. A new folder with the current date & time will be created in the private folder with bunch of CSVs
