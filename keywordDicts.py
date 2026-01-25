@@ -39,6 +39,16 @@ class Dicts:
                                      'rental of soldiers' : 'CONCERT VENUE FEE',
 
                                      # common keywords
+                                     'social' : 'SOCIAL',
+                                     'pizza' : 'SOCIAL',
+                                     'flower' : 'SOCIAL',
+                                     'shirt' : 'SOCIAL',
+                                     'hoodie' : 'SOCIAL',
+                                     'ticket' : 'SOCIAL',
+                                     'paint' : 'SOCIAL',
+                                     'custom ink' : 'SOCIAL',
+                                     'sticker' : 'SOCIAL',
+
                                      'journal' : 'GUEST COACHES & PERFORMERS',
                                      'guest' : 'GUEST COACHES & PERFORMERS',
                                      'coach' : 'GUEST COACHES & PERFORMERS',
@@ -49,16 +59,6 @@ class Dicts:
                                      'giving' : 'REVENUE',
                                      'donat' : 'REVENUE',
                                      'admin fee' : 'REVENUE',
-                                    
-                                     'social' : 'SOCIAL',
-                                     'pizza' : 'SOCIAL',
-                                     'flower' : 'SOCIAL',
-                                     'shirt' : 'SOCIAL',
-                                     'hoodie' : 'SOCIAL',
-                                     'ticket' : 'SOCIAL',
-                                     'paint' : 'SOCIAL',
-                                     'custom ink' : 'SOCIAL',
-                                     'sticker' : 'SOCIAL',
 
                                      'haul' : 'OTHER CONCERT EXPENSES',
                                      'ratchet' : 'OTHER CONCERT EXPENSES',
@@ -90,6 +90,7 @@ class Dicts:
                                      'copy' : 'MUSIC',
                                      'ink' : 'MUSIC',
                                      'compos' : 'MUSIC',
+                                     'music ' : 'MUSIC',
 
                                      'mute' : 'EQUIPMENT',
                                      'string' : 'EQUIPMENT',
