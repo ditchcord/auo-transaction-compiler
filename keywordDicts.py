@@ -32,10 +32,11 @@ class Dicts:
                                      'tarantino' : 'GUEST COACHES & PERFORMERS',
                                      'presentation' : 'GUEST COACHES & PERFORMERS',
                                      'raffle' : 'SOCIAL',
-                                     'karoke' : 'SOCIAL',
+                                     'karoke' : 'SOCIAL', # karaoke misspelled
                                      'coffee' : 'SOCIAL',
                                      'bagel' : 'SOCIAL',
                                      'chalk' : 'OTHER CONCERT EXPENSES',
+                                     'services for concert' : 'OTHER CONCERT EXPENSES',
                                      'rental of soldiers' : 'CONCERT VENUE FEE',
 
                                      # common keywords
@@ -57,7 +58,7 @@ class Dicts:
                                     
                                      'ja5' : 'REVENUE',
                                      'giving' : 'REVENUE',
-                                     'donat' : 'REVENUE',
+                                     'donat' : 'REVENUE', # donate/donation
                                      'admin fee' : 'REVENUE',
 
                                      'haul' : 'OTHER CONCERT EXPENSES',
@@ -71,13 +72,25 @@ class Dicts:
                                      'advert' : 'OTHER CONCERT EXPENSES',
                                      'poster' : 'OTHER CONCERT EXPENSES',
 
+
                                      'music director' : 'CONDUCTOR HONORARIUM',
                                      'conductor' : 'CONDUCTOR HONORARIUM',
                                      'jeffrey' : 'CONDUCTOR HONORARIUM',
                                      'j.klefstad' : 'CONDUCTOR HONORARIUM',
+                                     
+                                     'equipment' : 'EQUIPMENT',
+                                     'tape' : 'EQUIPMENT',
+                                     'mute' : 'EQUIPMENT',
+                                     'string' : 'EQUIPMENT',
+                                     'bass' : 'EQUIPMENT',
+                                     'domain' : 'EQUIPMENT',
+                                     'ssl' : 'EQUIPMENT',
+                                     'cabinet' : 'EQUIPMENT',
+                                     'kiltie' : 'EQUIPMENT',
+                                     'repair' : 'EQUIPMENT',
 
-                                     'carnegie' : 'CONCERT VENUE FEE',
-                                     ' venue' : 'CONCERT VENUE FEE',
+                                     'carnegie music' : 'CONCERT VENUE FEE',
+                                     ' venue' : 'CONCERT VENUE FEE', # only venue, not revenue
                                      'deposit' : 'CONCERT VENUE FEE',
                                      'balance payment' : 'CONCERT VENUE FEE',
                                      'piano tuning' : 'CONCERT VENUE FEE',
@@ -88,26 +101,20 @@ class Dicts:
                                      'score' : 'MUSIC',
                                      'print' : 'MUSIC',
                                      'copy' : 'MUSIC',
+                                     'copier' : 'MUSIC',
                                      'ink' : 'MUSIC',
-                                     'compos' : 'MUSIC',
-                                     'music ' : 'MUSIC',
-
-                                     'mute' : 'EQUIPMENT',
-                                     'string' : 'EQUIPMENT',
-                                     'bass' : 'EQUIPMENT',
-                                     'domain' : 'EQUIPMENT',
-                                     'ssl' : 'EQUIPMENT',
-                                     'cabinet' : 'EQUIPMENT',
+                                     'compos' : 'MUSIC', # compose/composition
                                     
                                      'allocation' : 'REVENUE',
                                      'surplus' : 'REVENUE',
-                                     'fundrais' : 'REVENUE',
+                                     'fundrais' : 'REVENUE', # fundraiser/fundraising
                                      'whipped' : 'REVENUE',
                                      'sales tax' : 'REVENUE',
                                      'mandatory benefits' : 'REVENUE',
                                      'dues' : 'REVENUE',
 
                                      # more general keywords
+                                     'music ' : 'MUSIC',
                                      'instrument' : 'EQUIPMENT',
                                      'flute' : 'EQUIPMENT',
                                      'supplies' : 'EQUIPMENT',
