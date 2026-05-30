@@ -1,5 +1,6 @@
 #
-# Jason H. Wells - wellsjason543 at gmail dot com - jwellsuhhuh (Discord)
+# money.py - module updated 2026/5/31
+# J Wells - wellsjason543 at gmail dot com - jwellsuhhuh (Discord)
 #
 
 class Money:

@@ -35,7 +35,7 @@
 
 ## Categories
 
-**CONCERT VENUE FEE**  
+**CONCERT VENUE**  
 Deposits and final payments for the rental of concert venues such as Soldiers and Sailors and Carnegie Music Hall.
 
 **CONDUCTOR HONORARIUM**  
@@ -45,8 +45,8 @@ Monthly payments made to the current main conductor of AUO
 Instrument repair, rental, and accessories. Librarian supplies for organizing music such as cabinets, folders, stationary.  
 Domain name and website expenses.
 
-**GUEST COACHES & PERFORMERS**  
-Expenses made to individual non-members to coach, perform, or speak at AUO events.
+**GUEST SERVICES**  
+Expenses made to individual non-members to coach, perform, or speak at AUO concerts and rehearsals.
 
 **MUSIC**  
 Sheet music purchase, rental, royalties, and printing costs.
@@ -59,9 +59,9 @@ Advertising for concerts is also allocated here. Poster printing and costs to de
 Expenses for food and purchases used for social events. Tickets to concerts or gifts. Merchandise expenses.
 
 **REVENUE**  
-Earnings from donations, anonymous donations, and earnings from fundraising.  
+Earnings from donations, anonymous concert/event donations, and earnings from fundraising.  
 Costs for fundraising supplies and admin fees are allocated here and treated as deductions from earnings.  
-Earnings from membership dues.  
+Earnings from membership dues.
 Earnings from yearly JFC allocation. JFC close-out surplus is deducted from this category.
 
 ## Why are there expenses in some revenue categories
@@ -72,8 +72,7 @@ Revenue in expense categories might be categorization mistakes and need to be fi
 
 ## Troubleshooting
 
-If items are being put into the wrong category, go to **keywordDicts.py** and add to or reorder  
-the dictionary entries.
+If items are being put into the wrong category, go to **keywordDicts.py** and edit the dictionary entries.
 
 Email wellsjason543 at gmail dot com for issues or questions
 

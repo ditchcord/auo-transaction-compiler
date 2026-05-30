@@ -1,16 +1,17 @@
 #
-# Jason H. Wells - wellsjason543 at gmail dot com - jwellsuhhuh (Discord)
+# AUO-TRANSACTION-COMPILER - main.py
+# J Wells - wellsjason543 at gmail dot com / jwellsuhhuh (Discord)
 #
-
-# local dependencies
-from money import Money
-from keywordDicts import Dicts
 
 import csv
 import os # for folder creation
 from os.path import isfile
 from datetime import datetime
 import re # for keyword substitution, fiscal year user-input examination
+
+# local dependencies
+from money import Money
+from keywordDicts import Dicts
 
 class Helpers:
     @staticmethod
@@ -48,8 +49,8 @@ class Transaction:
         self.account: str = transactionData[0]
         self.amount: Money = Money(transactionData[15]) 
         self.date: datetime = Transaction.processDate(transactionData[17])
-        self.category: str = Transaction.updateCategory(transactionData[11], transactionData[9], self.amount, self.account)
         self.itemName: str = Transaction.flattenItemName(transactionData[9])
+        self.category: str = Transaction.determineCategory(transactionData[11], self.itemName, self.amount)
     
     def __repr__(self): # NOT ACTUAL REPR
         return f'Transaction({self.account},{self.date},{self.category},{self.itemName},{self.amount}'
@@ -87,20 +88,24 @@ class Transaction:
         return Helpers.removeDuplicateSubstrings(itemName, 25) # 25 chars smallest substring to remove
 
     @staticmethod
-    def updateCategory(rawCategory: str, itemName: str, amount: Money, account: str) -> str:
-        # search for key phrase matches in item name
-        for keyword in Dicts.categoryByItemNameKeywordDict:
-            if keyword in itemName.lower():
-                return Dicts.categoryByItemNameKeywordDict[keyword]
+    def determineCategory(TCCategory: str, itemName: str, amount: Money) -> str:
+        # search for first category with TWO key phrase matches in item name
+        for category in Dicts.categoryToKeywordsDict:
+            occurrences = 0
+            for keyword in Dicts.categoryToKeywordsDict[category]:
+                if keyword in itemName.lower():
+                    occurrences += 1
+                    if 1 < occurrences: # = 2
+                        return category
         
-        # search for key phrase matches in tartan connect category
-        for keyword in Dicts.categoryByRawCategoryKeywordDict:
-            if keyword in rawCategory.lower():
-                return Dicts.categoryByRawCategoryKeywordDict[keyword]
+        # otherwise search for key phrase matches in tartan connect category
+        for keyword in Dicts.TCCategoryToCategoryDict:
+            if keyword in TCCategory.lower():
+                return Dicts.TCCategoryToCategoryDict[keyword]
 
         # no key phrase found - apply default category
         if amount.inCents < 0: 
-            return 'NO-CATEGORY' # default agency/gift expense category
+            return 'NO-CATEGORY' # default expense category
         else:
             return 'REVENUE' # default revenue category
 
