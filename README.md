@@ -42,21 +42,25 @@ Deposits and final payments for the rental of concert venues such as Soldiers an
 Monthly payments made to the current main conductor of AUO
 
 **EQUIPMENT**  
-Instrument repair, rental, and accessories. Librarian supplies for organizing music such as cabinets, folders, stationary.  
+Instrument repair, rental, and accessories. 
+Librarian supplies for organizing music such as cabinets, folders, stationary.  
 Domain name and website expenses.
 
 **GUEST SERVICES**  
-Expenses made to individual non-members to coach, perform, or speak at AUO concerts and rehearsals.
+Services from individual non-members to coach, perform, or speak at AUO concerts and rehearsals.
 
 **MUSIC**  
 Sheet music purchase, rental, royalties, and printing costs.
 
 **OTHER CONCERT EXPENSES**  
-Expenses for equipment rental and services used specifically for concerts. Uhual truck, lighting, sound.  
-Advertising for concerts is also allocated here. Poster printing and costs to design and deploy advertising for concerts.
+Equipment rental and services used SPECIFICALLY for concerts. U-haul truck, lighting, sound.
+Advertising for concerts is also allocated here, such as poster printing and facebook ads.
+Merch bought SPECIFICALLY for a concert.
+Flowers and gifts given during concert, and raffles held during concerts.
 
 **SOCIAL**  
-Expenses for food and purchases used for social events. Tickets to concerts or gifts. Merchandise expenses.
+Food and items purchased for use at social events for org members. 
+Merchandise for members that ISN'T bought specifically to use in a concert.
 
 **REVENUE**  
 Earnings from donations, anonymous concert/event donations, and earnings from fundraising.  
